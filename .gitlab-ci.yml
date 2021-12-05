@@ -17,7 +17,7 @@ code_review:
   tags:
     - code-review
   script:
-    - sonar-scanner -Dsonar.projectKey=data-qc -Dsonar.sources=. -Dsonar.host.url=https://gitlab.coe001.net/sonarqube -Dsonar.login=fb1295d2389f99a227163593d60df97ebe39e0ea
+    - sonar-scanner -Dsonar.projectKey=data-qc -Dsonar.sources=. -Dsonar.host.url=https://gitlab.coe001.net/sonarqube -Dsonar.login=xxxxxxxxxxxxxxxx
 
 build-job:
   stage: build

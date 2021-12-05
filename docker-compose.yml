@@ -1,0 +1,6 @@
+version: '3'
+services:
+  app:
+    container_name: app
+    image: hub.docker.com/programming-language-analysis:${IMAGE_VERSION}
+    restart: always

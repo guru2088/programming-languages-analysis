@@ -1,0 +1,58 @@
+variables:
+  VER: "v1.0.${CI_PIPELINE_IID}"
+  PRO_NAME: "programming-language-analysis"
+  DOCKER_REG: "hub.docker.com"
+  WEB_SERVER: "xxxxxx"
+
+stages:
+  - review
+  - build
+  - tagging
+  - deploy
+
+code_review:
+  except:
+    - tags
+  stage: review
+  tags:
+    - code-review
+  script:
+    - sonar-scanner -Dsonar.projectKey=data-qc -Dsonar.sources=. -Dsonar.host.url=https://gitlab.coe001.net/sonarqube -Dsonar.login=fb1295d2389f99a227163593d60df97ebe39e0ea
+
+build-job:
+  stage: build
+  tags:
+    - docker-build
+  script:
+    - echo "Starting build process... ${PRO_NAME}:${VER}"
+    - echo "Working directory is ${CI_PROJECT_DIR}"
+    - docker build -t ${PRO_NAME}:${VER} .
+    - docker tag ${PRO_NAME}:${VER} ${DOCKER_REG}/${PRO_NAME}:${VER}
+    - docker push ${DOCKER_REG}/${PRO_NAME}:${VER}
+    - echo "Congratulation, we are here finanlly. ${VER}"
+
+tagging_job:
+  except:
+    - tags
+  stage: tagging
+  when: on_success
+  tags:
+    - docker-build
+  script:
+    - git remote set-url origin git@github.com:guru2088/programming-languages-analysis.git
+    - git tag -a ${VER} -m "Tagging by gitlab-runner ${CI_RUNNER_ID}-${CI_RUNNER_DESCRIPTION}"
+    - git push origin ${VER}
+
+deploy:
+  only:
+    - master
+  stage: deploy
+  tags:
+    - docker-build
+  script:
+    - echo "Starting deploy process... ${PRO_NAME}:$VER"
+    - sshpass -V
+    - export SSHPASS=$USER_PASS
+    - sshpass -e ssh -o StrictHostKeyChecking=no xxxx@${WEB_SERVER} "rm -rf /xxxx/xxxx/docker-compose.yml"
+    - sshpass -e scp -o stricthostkeychecking=no -r ./docker-compose.yml xxxx@${WEB_SERVER}:~/docker-compose.yml
+    - sshpass -e ssh -o StrictHostKeyChecking=no xxxx@${WEB_SERVER} "IMAGE_VERSION=${VER} docker-compose up -d"
